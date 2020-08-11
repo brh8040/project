@@ -1,0 +1,181 @@
+/** Query by state **/
+	public static void stateQuery(JFrame frame) throws SQLException
+	{
+		// new page!
+		// include a back button that takes you to the main menu
+		JPanel statemenu = new JPanel();
+		
+		JLabel current_loc = new JLabel("Query by State");
+	    Dimension locSize = new Dimension(600, 100);
+	    current_loc.setFont(new Font("", Font.BOLD, 20)); // change the font size
+	    current_loc.setBounds(300, 0, locSize.width, locSize.height); // x-coordinate, y-coordinate, x-length, y-length
+	    
+	    JButton to_main = new JButton("Main Menu");
+	    Dimension mSize = to_main.getPreferredSize();
+	    to_main.setBounds(670, 500, mSize.width, mSize.height);
+	    
+	    /** 1st **/
+	    // date combo-box
+	    JComboBox<String> date2 = new JComboBox<String>();
+	    date2.addItem("SELECT DAY");
+	    date2.addItem("March 24, 2020");
+	    date2.addItem("March 31, 2020");
+	    date2.addItem("April 7, 2020");
+	    date2.addItem("April 14, 2020");
+	    date2.addItem("April 21, 2020");
+	    date2.addItem("April 28, 2020");
+	    date2.addItem("May 5, 2020");
+	    date2.addItem("May 12, 2020");
+	    date2.addItem("May 19, 2020");
+	    date2.addItem("May 26, 2020");
+	    date2.addItem("June 2, 2020");
+	    date2.addItem("June 9, 2020");
+	    date2.addItem("June 16, 2020");
+	    date2.addItem("June 23, 2020");
+	    date2.addItem("June 30, 2020");
+	    date2.addItem("July 7, 2020");
+	    date2.addItem("July 14, 2020");
+	    date2.addItem("July 21, 2020");
+	    date2.setEnabled(true); // this combo-box is to ALWAYS be enabled! :)
+
+	    /** 2nd **/
+	    // state combo-box
+	    JComboBox<String> states2 = new JComboBox<String>();
+	    states2.addItem("SELECT STATE");
+	    // don't add anything until a date is selected
+	    states2.setEnabled(true); // this should be disabled if no date is selected
+	    
+	    
+	    JTextArea result = new JTextArea();
+	    result.setLineWrap(true); // to wrap text...
+	    result.setWrapStyleWord(true); // and ensure no words are split
+	    
+	    JScrollPane scrollable = new JScrollPane(result);
+	    scrollable.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
+	    scrollable.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+	    
+	    
+	    date2.addActionListener(new ActionListener() {
+	    	public void actionPerformed(ActionEvent e)
+	    	{
+	    		final String selectedDate = (String) date2.getSelectedItem();
+	    	    String sqlDate = sqlDateFormat(selectedDate);
+	    	    
+	    	    boolean enableStates = true;
+	    	    
+	    	   
+	    	    
+	    	    // now populate the states combo-box with... the states!
+	    	    try
+	    	    {
+	    	    	states2.setEnabled(true); // before you reset its contents
+	    	    	ResultSet all_states;
+	    	    	Statement getStates;
+	    	    	getStates = conn.createStatement();
+					all_states = getStates.executeQuery("SELECT DISTINCT state FROM " + sqlDate + " ORDER BY state;");
+					
+					
+					if (enableStates)
+					{
+						states2.setEnabled(true);
+						while (all_states.next()) // add all the states (plus DC!)
+						{
+							states2.addItem(all_states.getString("state"));
+						}
+					}
+					conn.commit();
+				}
+	    	    catch (Exception e1)
+	    	    {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+	    	    
+            }
+	    });
+	    
+	    
+	    states2.addActionListener(new ActionListener() {
+	    	public void actionPerformed(ActionEvent e)
+	    	{
+	    		final String selectedState = (String) states2.getSelectedItem();
+    			final String selectedDate = (String) date2.getSelectedItem(); // trust me, you'll need this
+    			String sqlDate = sqlDateFormat(selectedDate);
+    			int num2 = 0;
+    			int num = 0;
+    			int num3 = 0;
+    		    ResultSet rs3 = null;
+				try {
+		  		      Statement statement = conn.createStatement();
+		  		    result.setText(null); // clears the result pane
+		  	    	result.setColumns(3); // puts 1 column in the result pane
+					rs3 = statement.executeQuery("SELECT sum(sub.Confirmed), sum(sub.Active), sum(sub.Deaths) FROM(SELECT s.Confirmed, s.Active, s.Deaths " + "FROM covid."+sqlDate+ " s WHERE s.State="+"'"+selectedState+"'"+" Order By s.State)sub;");
+				} catch (SQLException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+    			try {
+					while(rs3.next()) {
+					num = rs3.getInt(1);
+					num2 = rs3.getInt(2);
+					num3 = rs3.getInt(3);
+					System.out.println("Selected State: "+ selectedState);
+					System.out.println("Confirmed     Active        Deaths" );
+					System.out.println(num+"         "+num2+"      "+ num3);
+		    		result.append("Confirmed     Active        Deaths");
+		    		result.append("Selected State: "+ selectedState );
+		    		result.append(num+"         "+num2+"      "+ num3);
+
+
+
+					}
+				} catch (SQLException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+	    	}});
+	   
+    			// now populate the counties combo-box with... the counties!
+	    		
+	    		
+	    // Add an ActionListener
+	    to_main.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e)
+            {
+                try
+                {
+                	statemenu.removeAll(); // clear the panel before you create the next!
+					mainMenu(frame);
+				}
+                catch (SQLException e1)
+                {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+            }
+        });
+	    
+
+	    // Before anything can be added...
+	    statemenu.setLayout(null);
+	    
+	    // Now, add all the components!
+	    statemenu.add(current_loc);
+	    statemenu.add(to_main);
+	    date2.setBounds(50, 100, 150, 25); // x-coordinate, y-coordinate, x-length, y-length
+	    states2.setBounds(300, 100, 150, 25); // x-coordinate, y-coordinate, x-length, y-length
+	    result.setBounds(500, 100, 250, 350); // x-coordinate, y-coordinate, x-length, y-length
+	    result.setVisible(true);
+	    scrollable.setVisible(true);
+	    statemenu.add(date2);
+	    statemenu.add(states2);
+	    statemenu.add(scrollable);
+
+	    // Finally, display everything!
+	    
+	    statemenu.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+	    frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+	    frame.add(statemenu);
+	    frame.setSize(800, 600);
+	    frame.setVisible(true);
+	}
